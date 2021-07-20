@@ -54,9 +54,6 @@ int		main(int ac, char **av, char **envp)
 
     if (ac != 3)
         error_exit("3 args");
-//    addr.sin_addr.s_addr = inet_addr(av[1]);
-//    addr.sin_port = htons(atoi(av[2]));
-//    len = sizeof(addr);
 	do {
 		sock = socket(AF_INET, SOCK_STREAM, 0);
 		int val = 1;
@@ -84,6 +81,6 @@ int		main(int ac, char **av, char **envp)
 		error_standart(NULL);
 	if (!(data.env_var = init_env(envp, NULL)))
 		error_standart(NULL);
-	get_standart(&data, sock);
+	get_standart(&data, sock, ft_atoi(av[1]), ft_atoi(av[2]));
 	return (0);
 }

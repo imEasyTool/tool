@@ -30,6 +30,6 @@
 # include "get_next_line.h"
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#define SLEEP 5
+#define SLEEP 300
 
 #endif

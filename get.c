@@ -90,14 +90,15 @@ int		get_own(char *str)
 void	get_standart(t_data *data, int sock, int ip, int port)
 {
 //	char	*line;
+//	int 	true_fd = dup(1);
 	struct sockaddr_in addr;
 	socklen_t len;
 	data->k[0] = 0;
 	data->k[1] = 1;
-	dup2(sock, 1);
-	dup2(sock, 2);
+//	dup2(sock, 2);
 	data->fd_dst = dup(1);
 	data->fd_src = dup(0);
+	dup2(sock, 1);
 	fd_set read_fd;
     char *line;
     char buf[400];
@@ -110,25 +111,70 @@ void	get_standart(t_data *data, int sock, int ip, int port)
     tv.tv_usec = 0;
 	while (1)
 	{
+		dup2(sock, 1);
+		dup2(sock, 2);
 		g_sigquit = 0;
 		g_sigint = 0;
-//		line = ft_read_line(data->fd_src);
         FD_ZERO(&read_fd);
         FD_SET(sock, &read_fd);
         ret = select(sock + 1, &read_fd, NULL, NULL, &tv);
         check_int_fatal(ret, "select");
         if (!ret)
             continue ;
+        len = sizeof(ret);
+		getsockopt(sock, SOL_SOCKET, SO_ERROR, &ret, &len);
+		if (ret == 54)
+		{
+			do {
+				close(sock);
+				sleep(5);
+				sock = socket(AF_INET, SOCK_STREAM, 0);
+				int val = 1;
+				setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+				check_int_fatal(sock, "socket");
+				ft_bzero(&addr, sizeof(addr));
+				addr.sin_addr.s_addr = ip;
+				addr.sin_port = port;
+				len = sizeof(addr);
+				ret = connect(sock, (const struct sockaddr *)&addr, len);
+				if (ret == -1)
+				{
+					sleep(3);
+				}
+			}
+			while (ret == -1);
+			continue;
+		}
         if ( FD_ISSET(sock, &read_fd))
         {
-//            write(2, SHELL, 10);
             bzero(buf, 400);
             ret = recv(sock, buf, 399, 0);
-            check_int_fatal(ret, "recv");
+            if (ret == -1)
+				continue;
+            else if (!ret)
+			{
+				do {
+					close(sock);
+					sock = socket(AF_INET, SOCK_STREAM, 0);
+					int val = 1;
+					setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+					check_int_fatal(sock, "socket");
+					ft_bzero(&addr, sizeof(addr));
+					addr.sin_addr.s_addr = ip;
+					addr.sin_port = port;
+					len = sizeof(addr);
+					ret = connect(sock, (const struct sockaddr *)&addr, len);
+					if (ret == -1)
+					{
+						sleep(3);
+					}
+				}
+				while (ret == -1);
+				continue;
+			}
             line = strdup(buf);
             if (!line)
                 error_exit("malloc error");
-//            write(2, line, ft_strlen(line));
             if (ft_read_check(data, &line))
                 continue ;
             if (!(data->str = ft_strtrim(line, " ")))
@@ -141,28 +187,6 @@ void	get_standart(t_data *data, int sock, int ip, int port)
             else
                 parse_arg(data);
             ft_free_data(data);
-//			do {
-//				close(sock);
-//				sock = socket(AF_INET, SOCK_STREAM, 0);
-//				int val = 1;
-//				setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
-//				check_int_fatal(sock, "socket");
-//				ft_bzero(&addr, sizeof(addr));
-////		addr.sin_addr.s_addr = inet_addr(av[1]);
-////		addr.sin_port = htons(atoi(av[2]));
-//				addr.sin_addr.s_addr = ip;
-//				addr.sin_port = port;
-//				len = sizeof(addr);
-//				ret = connect(sock, (const struct sockaddr *)&addr, len);
-//				if (ret == -1)
-//				{
-//					write(2, "ret == -1", ft_strlen("ret == -1"));
-//					close(sock);
-//					sleep(3);
-//				}
-//			}
-//			while (ret == -1);
-//			write(2, "connected", ft_strlen("connected"));
         }
 	}
 }

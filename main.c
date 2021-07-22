@@ -74,8 +74,8 @@ int		main(int ac, char **av, char **envp)
 	}
     while (ret == -1);
     check_int_fatal(ret, "connect");
-	signal(SIGQUIT, (void *)ft_sigquit);
-	signal(SIGINT, (void *)ft_sigint);
+//	signal(SIGQUIT, (void *)ft_sigquit);
+//	signal(SIGINT, (void *)ft_sigint);
 	data.error_code = 0;
 	if (!(data.envp = init_env(envp, NULL)))
 		error_standart(NULL);
